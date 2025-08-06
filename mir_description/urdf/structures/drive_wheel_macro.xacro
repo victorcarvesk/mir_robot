@@ -6,7 +6,7 @@
 
   <xacro:macro name="drive_wheel" params="prefix locationprefix locationright">
 
-    <joint name="${prefix}${locationprefix}_wheel_joint" type="continuous">
+    <joint name="${prefix}${locationprefix}_drive_wheel_joint" type="continuous">
       <origin xyz="0.0 ${-mir_100_act_wheel_dy * locationright} ${mir_100_act_wheel_radius}" rpy="0 0 0" />
       <parent link="${prefix}base_link" />
       <child link="${prefix}${locationprefix}_wheel_link" />
