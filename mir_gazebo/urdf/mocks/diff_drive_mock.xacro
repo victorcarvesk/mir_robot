@@ -1,22 +1,30 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://ros.org/wiki/xacro">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <xacro:macro name="mir_100_wheel_transmission" params="prefix locationprefix">
-    <transmission name="${prefix}${locationprefix}_wheel_trans">
-      <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}${locationprefix}_wheel_joint">
-        <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
-      </joint>
-      <actuator name="${prefix}${locationprefix}_wheel_motor">
-        <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
-        <mechanicalReduction>1</mechanicalReduction>
-      </actuator>
-    </transmission>
-  </xacro:macro>
+  <ros2_control name="GazeboSystem" type="system">
 
-  <xacro:macro name="mir_100_wheel_transmissions" params="prefix">
-    <xacro:mir_100_wheel_transmission prefix="${prefix}" locationprefix="left"/>
-    <xacro:mir_100_wheel_transmission prefix="${prefix}" locationprefix="right"/>
-  </xacro:macro>
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+
+    <joint name="left_drive_wheel_joint">
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+
+    <joint name="right_drive_wheel_joint">
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+
+  </ros2_control>
 
 </robot>
