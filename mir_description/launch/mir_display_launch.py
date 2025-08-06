@@ -1,40 +1,60 @@
-import os
+#!/usr/bin/env python3
 
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import IfCondition, UnlessCondition
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
 
 def generate_launch_description():
 
-    mir_description_dir = get_package_share_directory('mir_description')
-    rviz_config_file = os.path.join(
-        mir_description_dir, 'rviz', 'mir_description.rviz')
+    pkg_mir_description = FindPackageShare('mir_description')
+
+    rviz_config_file = LaunchConfiguration('rviz_config_file')
+    hidden_joint_state = LaunchConfiguration('hidden_joint_state')
 
     return LaunchDescription([
 
         DeclareLaunchArgument(
-            'joint_state_publisher_enabled',
-            default_value='true',
-            description='Enable to publish joint states using joint state publisher'),
+            name='hidden_joint_state',
+            default_value='false',
+            description='Enable to publish joint states using joint state publisher'
+        ),
+        
+        DeclareLaunchArgument(
+            name='rviz_config_file',
+            default_value=PathJoinSubstitution([
+                pkg_mir_description, 'rviz', 'mir_description.rviz'
+            ]),
+            description='A display config file (.rviz) to load',
+        ),
 
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(mir_description_dir, 'launch', 'mir_launch.py')),
+            PythonLaunchDescriptionSource([
+                PathJoinSubstitution([
+                    pkg_mir_description, 'launch', 'mir_launch.py',
+                ]),
+            ]),
             launch_arguments={
-                'joint_state_publisher_enabled':
-                LaunchConfiguration('joint_state_publisher_enabled'),
-            }.items()
+                'use_rviz': 'true',
+                'rviz_config_file': rviz_config_file,
+            }.items(),
         ),
 
         Node(
-            package='rviz2',
-            executable='rviz2',
-            arguments=['-d', rviz_config_file],
-            parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}]
-        )
+            package='joint_state_publisher',
+            executable='joint_state_publisher',
+            output='both',
+            condition=IfCondition(hidden_joint_state),
+        ),
 
+        Node(
+            package='joint_state_publisher_gui',
+            executable='joint_state_publisher_gui',
+            output='both',
+            condition=UnlessCondition(hidden_joint_state),
+        ),
     ])

@@ -1,8 +1,11 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:include filename="$(find mir_description)/urdf/include/common_properties.urdf.xacro" />
 
-  <xacro:macro name="actuated_wheel" params="prefix  locationprefix locationright">
+  <xacro:include filename="$(find mir_description)/urdf/properties/inertial_macro.xacro" />
+  <xacro:include filename="$(find mir_description)/urdf/properties/material_macro.xacro" />
+
+  <xacro:macro name="drive_wheel" params="prefix locationprefix locationright">
+
     <joint name="${prefix}${locationprefix}_wheel_joint" type="continuous">
       <origin xyz="0.0 ${-mir_100_act_wheel_dy * locationright} ${mir_100_act_wheel_radius}" rpy="0 0 0" />
       <parent link="${prefix}base_link" />
@@ -22,7 +25,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://mir_description/meshes/visual/wheel.stl" />
+          <mesh filename="package://mir_description/meshes/structures/wheel/wheel.stl" />
         </geometry>
         <xacro:insert_block name="material_dark_grey" />
       </visual>
@@ -33,9 +36,6 @@
         </geometry>
       </collision>
     </link>
-    <gazebo reference="${prefix}${locationprefix}_wheel_link">
-      <material>Gazebo/DarkGrey</material>
-    </gazebo>
 
     <!-- set the gazebo friction parameters for the wheels -->
     <gazebo reference="${prefix}${locationprefix}_wheel_link">
@@ -71,5 +71,7 @@
           </surface>
       </collision>
     </gazebo>
+
   </xacro:macro>
+
 </robot>

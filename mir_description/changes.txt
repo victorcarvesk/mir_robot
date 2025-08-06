@@ -1,0 +1,39 @@
+STATUS ATUAL
+refatorar diff_drive_mock.xacro
+rever nomenclatura e funcao dos xacros das rodas.
+
+
+---
+
+
+OBS.: Atualitar arquivos Docker (Dockerfile) e demais referentes a outras versoes do ROS.
+
+Clonar repo do MIR
+
+Clonar repo das dependencias (vcs import < src/mir_robot/ros2.repos src --recursive)
+PS.: deve dar para fazer isto por dentro do ROS, talvez pelo package.xml + rosdep
+
+
+---
+
+
+pacote:
+- renomeado para mir100_description já que os arquivos sao exclusivos do modelo mir100
+
+meshes:
+- organizacao por tipo para facilitar localizacao e manutencao
+- sufixos _visual e _collision para facilitar identificacao e rastreamento
+
+cmakelists:
+- versao 3.28 (antes 3.5) que é a default do Ubuntu 24.04
+- remocao de find_packages irrelevantes para compilacao do codigo fonte
+- adicao do ament_environment_hooks para configurar variaveis uteis ao Gazebo (localizar as meshes do pacote)
+
+urdf:
+- adição do sufixo macro 1
+
+
+
+OBS.:
+- ver se é melhor colocar plugins do gazebo no _gazebo ou no _description (no _gazebo é melhor para multiplos simuladores)
+- o diretorio dos xacros do ros2_control do gazebo deve ser nomeado como ros2_control ou mocks (mocks parece melhor para ficar mais claro)

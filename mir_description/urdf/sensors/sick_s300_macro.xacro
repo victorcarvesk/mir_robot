@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <xacro:include filename="$(find mir_description)/urdf/include/common_properties.urdf.xacro" />
+  <xacro:include filename="$(find mir_description)/urdf/properties/inertial_macro.xacro" />
+  <xacro:include filename="$(find mir_description)/urdf/properties/material_macro.xacro" />
 
   <xacro:property name="laser_x" value="0.156" />
   <xacro:property name="laser_y" value="0.155" />
@@ -13,7 +14,7 @@
       <visual>
         <origin xyz="0.0 0.0 0.0" rpy="${pi} 0 0" />
         <geometry>
-          <mesh filename="package://mir_description/meshes/visual/sick_lms-100.stl" />
+          <mesh filename="package://mir_description/meshes/sensors/sick_lms_100/sick_lms_100_visual.stl" />
         </geometry>
         <!-- <xacro:insert_block name="material_yellow" /> -->
         <xacro:insert_block name="material_black" />
@@ -21,7 +22,7 @@
       <collision>
         <origin xyz="0.0 0.0 0.0" rpy="${pi} 0 0" />
         <geometry>
-          <mesh filename="package://mir_description/meshes/visual/sick_lms-100.stl" />
+          <mesh filename="package://mir_description/meshes/sensors/sick_lms_100/sick_lms_100_visual.stl" />
         </geometry>
       </collision>
       <xacro:box_inertial x="${laser_x}" y="${laser_y}" z="${laser_z}" mass="${laser_mass}">
@@ -32,12 +33,10 @@
     <gazebo reference="${prefix}${link}">
       <!-- <material value="Gazebo/Yellow" /> -->
       <material value="Gazebo/FlatBlack" />
-      <sensor type="gpu_lidar" name="${prefix}${link}">
+      <sensor type="ray" name="${prefix}${link}">
         <visualize>false</visualize>
         <update_rate>12.5</update_rate>
-        <gz_frame_id>${prefix}${link}</gz_frame_id>
-        <topic>${prefix}${topic}</topic>
-        <lidar>
+        <ray>
           <scan>
             <horizontal>
               <samples>541</samples>
@@ -48,7 +47,7 @@
           </scan>
           <range>
             <min>0.05</min>
-            <max>8.0</max>
+            <max>29.0</max>
             <resolution>0.01</resolution>
           </range>
           <noise>
@@ -59,15 +58,9 @@
             <mean>0.0</mean>
             <stddev>0.01</stddev>
           </noise>
-        </lidar>
-
-        <!-- <plugin name="gazebo_ros_${link}_controller" type="libgazebo_ros_ray_sensor.so">    
-          <ros>
-            <remapping>~/out:=${prefix}${topic}</remapping>
-          </ros>
-          <output_type>sensor_msgs/LaserScan</output_type>
-          <frame_name>${prefix}${link}</frame_name>
-        </plugin> -->
+        </ray>
+        <topic>${prefix}${topic}</topic>
+        <gz_frame_id>${prefix}${link}</gz_frame_id>
       </sensor>
     </gazebo>
   </xacro:macro>

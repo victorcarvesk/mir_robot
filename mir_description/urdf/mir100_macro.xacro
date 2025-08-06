@@ -1,14 +1,18 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <xacro:include filename="$(find mir_description)/urdf/include/common_properties.urdf.xacro" />
-  <xacro:include filename="$(find mir_description)/urdf/include/imu.gazebo.urdf.xacro" />
-  <xacro:include filename="$(find mir_description)/urdf/include/mir_100.gazebo.xacro" />
-  <xacro:include filename="$(find mir_description)/urdf/include/mir_100.transmission.xacro" />
-  <xacro:include filename="$(find mir_description)/urdf/include/sick_s300.urdf.xacro" />
-  <xacro:include filename="$(find mir_description)/urdf/include/wheel.urdf.xacro" />
-  <xacro:include filename="$(find mir_description)/urdf/include/caster.urdf.xacro" />
+  <!-- MACROS -->
+  <xacro:include filename="$(find mir_description)/urdf/properties/inertial_macro.xacro" />
+  <xacro:include filename="$(find mir_description)/urdf/properties/material_macro.xacro" />
 
+  <xacro:include filename="$(find mir_description)/urdf/structures/caster_wheel_macro.xacro" />
+  <xacro:include filename="$(find mir_description)/urdf/structures/drive_wheel_macro.xacro" />
+
+  <xacro:include filename="$(find mir_description)/urdf/sensors/imu_macro.xacro" />
+  <xacro:include filename="$(find mir_description)/urdf/sensors/sick_s300_macro.xacro" />
+
+
+  <!-- PROPERTIES -->
   <xacro:property name="deg_to_rad" value="0.017453293" />
 
   <!-- The inertia for the MiR platform is intentionally chosen to be smaller than
@@ -46,7 +50,9 @@
 
   <xacro:property name="imu_stdev" value="0.00017" />
 
-  <xacro:macro name="mir_100" params="prefix ns">
+
+  <!-- MiR100 -->
+  <xacro:macro name="mir100" params="prefix ns">
     <link name="${prefix}base_footprint" />
 
     <joint name="${prefix}base_joint" type="fixed">
@@ -62,14 +68,14 @@
       <visual>
         <origin xyz="${mir_100_act_wheel_dx} 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://mir_description/meshes/visual/mir_100_base.stl" />
+          <mesh filename="package://mir_description/meshes/structures/mir100_chassis/mir100_chassis_visual.stl" />
         </geometry>
         <xacro:insert_block name="material_white" />
       </visual>
       <collision>
         <origin xyz="${mir_100_act_wheel_dx} 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://mir_description/meshes/collision/mir_100_base.stl" />
+          <mesh filename="package://mir_description/meshes/structures/mir100_chassis/mir100_chassis_collision.stl" />
         </geometry>
       </collision>
     </link>
@@ -142,8 +148,9 @@
     <link name="${prefix}us_2_frame" />
 
     <!-- wheels -->
-    <xacro:actuated_wheel prefix="${prefix}" locationprefix="left" locationright="-1"/>
-    <xacro:actuated_wheel prefix="${prefix}" locationprefix="right" locationright="1"/>
+    <xacro:drive_wheel prefix="${prefix}" locationprefix="left" locationright="-1"/>
+    <xacro:drive_wheel prefix="${prefix}" locationprefix="right" locationright="1"/>
+
     <xacro:caster_wheel prefix="${prefix}" ns="${ns}" locationprefix="fl" locationright="-1" wheel_base_dx="${mir_100_front_caster_wheel_base_dx}"/>
     <xacro:caster_wheel prefix="${prefix}" ns="${ns}" locationprefix="fr" locationright="1" wheel_base_dx="${mir_100_front_caster_wheel_base_dx}"/>
     <xacro:caster_wheel prefix="${prefix}" ns="${ns}" locationprefix="bl" locationright="-1" wheel_base_dx="${mir_100_back_caster_wheel_base_dx}"/>
@@ -167,8 +174,6 @@
     </joint>
 
     <link name="${prefix}surface_mount"/>
-
-    <xacro:mir_100_wheel_transmissions prefix="${prefix}"/>
 
   </xacro:macro>
 </robot>
