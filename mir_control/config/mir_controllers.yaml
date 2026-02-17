@@ -1,0 +1,44 @@
+/**:
+  controller_manager:
+    ros__parameters:
+      update_rate: 30
+      use_sim_time: true
+
+      joint_state_broadcaster:
+        type: joint_state_broadcaster/JointStateBroadcaster
+
+      diff_drive_base_controller:
+        type: diff_drive_controller/DiffDriveController
+
+  diff_drive_base_controller:
+    ros__parameters:
+
+      left_wheel_names: ["mir100/left_drive_wheel_joint"]
+      right_wheel_names: ["mir100/right_drive_wheel_joint"]
+
+      wheel_separation: 0.445208
+      wheel_radius: 0.0625
+
+      publish_rate: 50.0
+
+      odom_frame_id: mir100/odom
+      base_frame_id: mir100/base_footprint
+
+      open_loop: false
+      enable_odom_tf: true
+
+      # use_stamped_vel: false
+      tf_frame_prefix_enable: false
+  
+  joint_state_broadcaster:
+    ros__parameters:
+      extra_joints:
+        - mir100/rear_left_caster_rotation_joint
+        - mir100/rear_left_caster_wheel_joint
+        - mir100/rear_right_caster_rotation_joint
+        - mir100/rear_right_caster_wheel_joint
+        - mir100/front_left_caster_rotation_joint
+        - mir100/front_left_caster_wheel_joint
+        - mir100/front_right_caster_rotation_joint
+        - mir100/front_right_caster_wheel_joint
+
