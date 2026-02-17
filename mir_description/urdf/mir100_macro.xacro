@@ -1,0 +1,230 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- MACROS -->
+  <xacro:include filename="$(find mir_description)/urdf/include/inertial_macros.xacro" />
+  <xacro:include filename="$(find mir_description)/urdf/include/material_properties.xacro" />
+
+  <xacro:include filename="$(find mir_description)/urdf/include/caster_wheel_macro.xacro" />
+  <xacro:include filename="$(find mir_description)/urdf/include/drive_wheel_macro.xacro" />
+
+  <xacro:include filename="$(find mir_description)/urdf/include/imu_macro.xacro" />
+  <xacro:include filename="$(find mir_description)/urdf/include/sick_s300_macro.xacro" />
+  <xacro:include filename="$(find mir_description)/urdf/include/ultrasound_macro.xacro" />
+
+  <!-- The inertia for the MiR platform is intentionally chosen to be smaller than
+       the bounding box and also shifted a bit to the back, because most of the mass
+       is in the lower center back (because of the batteries). -->
+  <xacro:property name="mir100_base_inertial_x" value="-0.05" />
+  <xacro:property name="mir100_base_inertial_y" value="0.0" />
+  <xacro:property name="mir100_base_inertial_z" value="0.15" />
+  <xacro:property name="mir100_base_inertial_x_length" value="0.50" />
+  <xacro:property name="mir100_base_inertial_y_length" value="0.30" />
+  <xacro:property name="mir100_base_inertial_z_length" value="0.20" />
+
+  <xacro:property name="mir100_mass_center_offset_x" value="0.037646" />
+  <!-- <xacro:property name="mir100_drive_wheel_dy" value="0.222604" /> -->
+
+  <!-- MiR 100 complete mass 78.2kg (8.2kg battery) -->
+  <!-- - 2x2kg sick laser = 4kg-->
+  <!-- - 4x caster wheels + rotation link: 4x 1.31 kg -->
+  <!-- - 2x act wheels: 2kg -->
+  <xacro:property name="mir100_base_mass" value="66.96" />
+
+  
+  <!-- MiR100 -->
+  <xacro:macro name="mir100" params="prefix parent *origin">
+
+    <joint name="${prefix}base_joint" type="fixed">
+      <parent link="${parent}" />
+      <child link="${prefix}base_link" />
+      <xacro:insert_block name="origin" />
+    </joint>
+
+    <link name="${prefix}base_link">
+      <visual>
+        <origin xyz="${mir100_mass_center_offset_x} 0 -0.0625" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mir_description/meshes/visual/mir_100_base.stl" />
+        </geometry>
+        <xacro:insert_block name="material_white" />
+      </visual>
+
+      <collision>
+        <origin xyz="${mir100_mass_center_offset_x} 0 -0.0625" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mir_description/meshes/collision/mir_100_base.stl" />
+        </geometry>
+      </collision>
+
+      <!-- <xacro:box_inertial
+        mass="${mir100_base_mass}"
+        x="${mir100_base_inertial_x_length}"
+        y="${mir100_base_inertial_y_length}"
+        z="${mir100_base_inertial_z_length}">
+        <origin
+          xyz="${mir100_base_inertial_x + mir100_mass_center_offset_x} ${mir100_base_inertial_y} ${mir100_base_inertial_z}"
+          rpy="0 0 0"
+        />
+      </xacro:box_inertial> -->
+    </link>
+
+
+    <!-- WHEELS -->
+    <!-- <xacro:property name="mir100_drive_wheelbase_half" value="0.0" /> -->
+    <xacro:property name="mir100_drive_track_width_half" value="0.222604" />
+    <xacro:property name="mir100_drive_suspension" value="0.0" />
+
+    <xacro:drive_wheel
+      prefix="${prefix}left_"
+      parent="${prefix}base_link"
+    >
+      <origin
+        xyz="0 ${mir100_drive_track_width_half} ${mir100_drive_suspension}"
+        rpy="0 0 0"
+      />
+    </xacro:drive_wheel>
+
+    <xacro:drive_wheel
+      prefix="${prefix}right_"
+      parent="${prefix}base_link"
+    >
+      <origin
+        xyz="0 -${mir100_drive_track_width_half} ${mir100_drive_suspension}"
+        rpy="0 0 0"
+      />
+    </xacro:drive_wheel>
+
+
+    <xacro:property name="mir100_wheelbase_half" value="0.341346" />
+    <xacro:property name="mir100_track_width_half" value="0.203" />
+    <xacro:property name="mir100_suspension" value="0.094" />
+
+    <xacro:caster_wheel
+      prefix="${prefix}front_right_"
+      parent="${prefix}base_link"
+    >
+      <origin
+        xyz="${mir100_wheelbase_half} -${mir100_track_width_half} ${mir100_suspension}"
+        rpy="0 0 0"
+      />
+    </xacro:caster_wheel>
+
+    <xacro:caster_wheel
+      prefix="${prefix}front_left_"
+      parent="${prefix}base_link"
+    >
+      <origin
+        xyz="${mir100_wheelbase_half} ${mir100_track_width_half} ${mir100_suspension}"
+        rpy="0 0 0"
+      />
+    </xacro:caster_wheel>
+
+    <xacro:caster_wheel
+      prefix="${prefix}rear_right_"
+      parent="${prefix}base_link"
+    >
+      <origin
+        xyz="-0.270154 -${mir100_track_width_half} ${mir100_suspension}"
+        rpy="0 0 0"
+      />
+    </xacro:caster_wheel>
+
+    <xacro:caster_wheel
+      prefix="${prefix}rear_left_"
+      parent="${prefix}base_link"
+    >
+      <origin
+        xyz="-0.270154 ${mir100_track_width_half} ${mir100_suspension}"
+        rpy="0 0 0"
+      /> 
+    </xacro:caster_wheel>
+
+
+    <!-- IMU sensor -->
+    <xacro:imu
+      prefix="${prefix}main_"
+      parent="${prefix}base_link"
+    >
+      <origin
+        xyz="0 0 0.1875"
+        rpy="0 0 0"
+      />
+    </xacro:imu>
+
+
+    <!-- LiDAR sensors -->
+    <xacro:sick_s300
+      prefix="${prefix}front_"
+      parent="${prefix}base_link"
+    >
+      <origin
+        xyz="0.4288 0.2358 0.1289"
+        rpy="0.0 0.0 ${0.25 * pi}"
+      />
+    </xacro:sick_s300>
+
+    <xacro:sick_s300
+      prefix="${prefix}rear_"
+      parent="${prefix}base_link"
+     >
+      <origin
+        xyz="-0.3548 -0.2352 0.1289"
+        rpy="0.0 0.0 ${-0.75 * pi}"
+      />
+    </xacro:sick_s300>
+
+    <!-- virtual link for merged laserscan-->
+    <joint name="${prefix}virtual_lidar_joint" type="fixed">
+      <parent link="${prefix}base_link" />
+      <child link="${prefix}virtual_lidar_link" />
+      <origin xyz="0.0 0.0 0.1289" rpy="0.0 0.0 0" />
+    </joint>
+
+    <link name="${prefix}virtual_lidar_link" />
+
+
+    <!-- ULTRASOUND sensors -->
+    <xacro:ultrasound
+      prefix="${prefix}front_right_"
+      parent="${prefix}base_link"
+    >
+      <origin
+        xyz="0.45 -0.12 0.0975"
+        rpy="0 0 0"
+      />  <!-- from visually matching to the mesh of the MiR -->
+    </xacro:ultrasound>
+
+    <xacro:ultrasound
+      prefix="${prefix}front_left_"
+      parent="${prefix}base_link"
+    >
+      <origin
+        xyz="0.45 0.12 0.0975"
+        rpy="0 0 0"
+      />  <!-- from visually matching to the mesh of the MiR -->
+    </xacro:ultrasound>
+
+    
+    <!-- SURFACE -->
+    <joint name="${prefix}surface_joint" type="fixed">
+      <parent link="${prefix}base_link" />
+      <child link="${prefix}surface" />
+      <origin xyz="${mir100_mass_center_offset_x} 0 0.2915" rpy="0 0 0" />
+      <axis xyz="0 0 1" />
+    </joint>
+
+    <link name="${prefix}surface" />
+
+    <joint name="${prefix}surface_mount_joint" type="fixed">
+      <parent link="${prefix}surface" />
+      <child link="${prefix}surface_mount" />
+      <!-- distance between mount holes on mir100 surface is 620 x 410 mm -->
+      <origin xyz="0.310 0.205 0" rpy="0 0 0" />
+      <axis xyz="0 0 1" />
+    </joint>
+
+    <link name="${prefix}surface_mount" />
+
+  </xacro:macro>
+</robot>

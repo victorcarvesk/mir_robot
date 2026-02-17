@@ -1,31 +1,44 @@
 <?xml version="1.0"?>
-
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-  <!-- If tf_prefix is given, use "frame tf_prefix/imu_frame", else "imu_frame" -->
-  <xacro:arg name="tf_prefix" default="" />
-  <xacro:property name="tf_prefix" value="$(arg tf_prefix)" />
-  <xacro:if value="${tf_prefix == ''}">
-      <xacro:property name="imu_frame" value="imu_frame" />
-  </xacro:if>
-  <xacro:unless value="${tf_prefix == ''}">
-      <xacro:property name="imu_frame" value="$(arg tf_prefix)/imu_frame" />
-  </xacro:unless>
 
-  <xacro:macro name="imu_gazebo" params="link imu_topic update_rate stdev">
-    <gazebo reference="${link}">
+  <xacro:property name="imu_topic" value="imu_data" />
+  <xacro:property name="imu_update_rate" value="50.0" />
+  <xacro:property name="imu_stdev" value="0.00017" />
+
+  <xacro:macro name="imu" params="prefix parent *origin">
+
+    <joint name="${prefix}imu_joint" type="fixed">
+      <parent link="${parent}" />
+      <child link="${prefix}imu_link" />
+      <xacro:insert_block name="origin" />  <!-- same as real MiR -->
+    </joint>
+
+    <link name="${prefix}imu_link" />
+
+    <!-- Create an alias for imu_link. This is necessary because the real MiR's
+         TF has imu_link, but the imu_data topic is published in the imu_frame
+         frame. -->
+    <joint name="${prefix}imu_frame_joint" type="fixed">
+      <parent link="${prefix}imu_link" />
+      <child link="${prefix}imu_frame" />
+    </joint>
+
+    <link name="${prefix}imu_frame" />
+
+    <gazebo reference="${prefix}imu_link">
       <gravity>true</gravity>
       <sensor name="imu_sensor" type="imu">
         <always_on>true</always_on>
-        <update_rate>${update_rate}</update_rate>
+        <update_rate>${imu_update_rate}</update_rate>
         <visualize>true</visualize>
-        <frame_id>${imu_frame}</frame_id> 
-        <topic>${imu_topic}</topic>
+        <gz_frame_id>${prefix}imu_frame</gz_frame_id> 
+        <topic>${prefix}${imu_topic}</topic>
         <imu>
           <angular_velocity>
             <x>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>${stdev}</stddev>
+                <stddev>${imu_stdev}</stddev>
                 <bias_mean>0.0000075</bias_mean>
                 <bias_stddev>0.0000008</bias_stddev>
               </noise>
@@ -33,7 +46,7 @@
             <y>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>${stdev}</stddev>
+                <stddev>${imu_stdev}</stddev>
                 <bias_mean>0.0000075</bias_mean>
                 <bias_stddev>0.0000008</bias_stddev>
               </noise>
@@ -41,7 +54,7 @@
             <z>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>${stdev}</stddev>
+                <stddev>${imu_stdev}</stddev>
                 <bias_mean>0.0000075</bias_mean>
                 <bias_stddev>0.0000008</bias_stddev>
               </noise>
@@ -51,7 +64,7 @@
             <x>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>${stdev}</stddev>
+                <stddev>${imu_stdev}</stddev>
                 <bias_mean>0.1</bias_mean>
                 <bias_stddev>0.001</bias_stddev>
               </noise>
@@ -59,7 +72,7 @@
             <y>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>${stdev}</stddev>
+                <stddev>${imu_stdev}</stddev>
                 <bias_mean>0.1</bias_mean>
                 <bias_stddev>0.001</bias_stddev>
               </noise>
@@ -67,7 +80,7 @@
             <z>
               <noise type="gaussian">
                 <mean>0.0</mean>
-                <stddev>${stdev}</stddev>
+                <stddev>${imu_stdev}</stddev>
                 <bias_mean>0.1</bias_mean>
                 <bias_stddev>0.001</bias_stddev>
               </noise>

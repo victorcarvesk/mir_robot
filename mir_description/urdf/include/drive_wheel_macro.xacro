@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:include
+    filename="$(find mir_description)/urdf/include/inertial_macros.xacro"
+  />
+  <xacro:include
+    filename="$(find mir_description)/urdf/include/material_properties.xacro"
+  />
+
+  <xacro:property name="drive_wheel_radius" value="0.0625" />
+  <xacro:property name="drive_wheel_width" value="0.032" />
+  <xacro:property name="drive_wheel_mass" value="1.0" />
+
+  <xacro:macro name="drive_wheel" params="prefix parent *origin">
+    <joint name="${prefix}drive_wheel_joint" type="continuous">
+      <parent link="${parent}" />
+      <child link="${prefix}drive_wheel_link" />
+      <xacro:insert_block name="origin" />
+      <axis xyz="0 1 0" />
+      <limit effort="100" velocity="20.0" />
+    </joint>
+
+    <link name="${prefix}drive_wheel_link">
+      <visual>
+        <geometry>
+          <mesh filename="package://mir_description/meshes/visual/wheel.stl" />
+        </geometry>
+        <xacro:insert_block name="material_dark_grey" />
+      </visual>
+      
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
+        <geometry>
+          <cylinder radius="${drive_wheel_radius}" length="${drive_wheel_width}" />
+        </geometry>
+      </collision>
+
+      <xacro:cylinder_inertial
+        mass="${drive_wheel_mass}"
+        radius="${drive_wheel_radius}"
+        length="${drive_wheel_width}"
+      >
+        <origin xyz="0 0 0" rpy="$${pi/2} 0 0" />
+      </xacro:cylinder_inertial>
+    </link>
+
+    <gazebo reference="${prefix}drive_wheel_link">
+      <collision name="${prefix}drive_wheel_link_gazebo_collision">
+        <surface>
+            <friction>
+              <ode>
+                <mu>300.0</mu>
+                <mu2>300.0</mu2>
+                <fdir1>0 0 1</fdir1>
+                <!-- <slip1>0</slip1>
+                <slip2>0</slip2> -->
+              </ode>
+              <torsional>
+                <coefficient>300</coefficient>
+                <use_patch_radius>false</use_patch_radius>
+                <surface_radius>${drive_wheel_radius}</surface_radius>
+              </torsional>
+            </friction>
+            <contact>
+              <ode>
+                <!-- <soft_cfm>0.0</soft_cfm>
+                <soft_erp>0.2</soft_erp> -->
+                <!-- <kp>10000000.0</kp>
+                <kd>1.0</kd>
+                <max_vel>0.01</max_vel> -->
+                <min_depth>0.001</min_depth> <!-- depth needed to have contact friction-->
+              </ode>
+            </contact>
+          </surface>
+      </collision>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>

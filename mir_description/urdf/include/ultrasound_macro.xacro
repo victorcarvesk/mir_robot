@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="ultrasound" params="prefix parent *origin">
+
+    <joint name="${prefix}ultrasound_joint" type="fixed">
+      <parent link="${parent}" />
+      <child link="${prefix}ultrasound_frame" />
+      <xacro:insert_block name="origin" />
+    </joint>
+
+    <link name="${prefix}ultrasound_frame" />
+
+  </xacro:macro>
+</robot>

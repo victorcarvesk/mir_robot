@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:include
+    filename="$(find mir_description)/urdf/include/inertial_macros.xacro"
+  />
+  <xacro:include
+    filename="$(find mir_description)/urdf/include/material_properties.xacro"
+  />
+
+  <xacro:property name="deg_to_rad" value="0.017453293" />
+
+  <xacro:property name="caster_wheel_mass" value="1.0" />
+  <xacro:property name="caster_wheel_radius" value="0.0625" />
+  <xacro:property name="caster_wheel_width" value="0.032" />
+
+  <xacro:property name="caster_offset" value="-0.0382" />
+  <xacro:property name="caster_height" value="-0.094" />
+
+  <xacro:macro name="caster_wheel" params="prefix parent *origin">
+
+    <joint name="${prefix}caster_rotation_joint" type="continuous">
+      <parent link="${parent}" />
+      <child link="${prefix}caster_rotation_link" />
+      <xacro:insert_block name="origin" />
+      <axis xyz="0 0 1" />
+      <dynamics damping="0.0" friction="0.5" />
+    </joint>
+
+    <link name="${prefix}caster_rotation_link">
+      <visual>
+        <geometry>
+          <mesh filename="package://mir_description/meshes/visual/caster_wheel_base.stl" />
+        </geometry>
+        <xacro:insert_block name="material_silver" />
+      </visual>
+
+      <collision>
+        <geometry>
+          <mesh filename="package://mir_description/meshes/collision/caster_wheel_base.stl" />
+        </geometry>
+      </collision>
+
+      <inertial>
+        <origin
+          xyz="0 0 -0.042500000044"
+          rpy="${24 * deg_to_rad} 0 ${0.5 * pi}"
+        />
+        <mass value="0.3097539019" />
+        <inertia
+          ixx="0.0005844517978"
+          ixy="0"
+          ixz="0"
+          iyy="0.00052872551237"
+          iyz="0"
+          izz="0.00017923555074"
+        />
+      </inertial>
+    </link>
+
+    <joint name="${prefix}caster_wheel_joint" type="continuous">
+      <parent link="${prefix}caster_rotation_link" />
+      <child link="${prefix}caster_wheel_link" />
+      <origin xyz="${caster_offset} 0 ${caster_height}" rpy="0 0 0" />
+      <axis xyz="0 1 0" />
+      <limit effort="100" velocity="20.0" />
+    </joint>
+
+    <link name="${prefix}caster_wheel_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mir_description/meshes/visual/wheel.stl" />
+        </geometry>
+        <xacro:insert_block name="material_dark_grey" />
+      </visual>
+      
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
+        <geometry>
+          <cylinder radius="${caster_wheel_radius}" length="${caster_wheel_width}" />
+        </geometry>
+      </collision>
+
+      <xacro:cylinder_inertial
+        mass="${caster_wheel_mass}"
+        radius="${caster_wheel_radius}"
+        length="${caster_wheel_width}"
+      >
+        <origin xyz="0 0 0" rpy="$${pi/2} 0 0" />
+      </xacro:cylinder_inertial>
+    </link>
+
+    <gazebo reference="${prefix}caster_wheel_link">
+      <collision name="${prefix}caster_wheel_link_gazebo_collision">
+        <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+                <fdir1>0 0 1</fdir1>
+                <slip1>0.0</slip1>
+                <slip2>0.5</slip2>
+              </ode>
+            </friction>
+            <contact>
+              <ode>
+                <kp>100000000.0</kp>
+                <min_depth>0.0</min_depth>
+              </ode>
+            </contact>
+          </surface>
+      </collision>
+    </gazebo>
+  </xacro:macro>
+</robot>
