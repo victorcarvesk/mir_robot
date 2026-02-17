@@ -1,17 +1,21 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-  
-  <xacro:macro name="controller_plugin_gazebo" params="robot_namespace">
-    <gazebo>
-      <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-        <robot_param>robot_description</robot_param>
-        <robot_param_node>robot_state_publisher</robot_param_node>
-        <xacro:unless value="${robot_namespace == ''}">
-          <robot_namespace>${robot_namespace}</robot_namespace>
-        </xacro:unless>
-        <control_period>0.001</control_period>
-      </plugin>
-    </gazebo>
-  </xacro:macro>
+
+  <gazebo>
+
+    <plugin
+      filename="gz_ros2_control-system"
+      name="gz_ros2_control::GazeboSimROS2ControlPlugin"
+    >
+      <parameters>$(find mir_control)/config/mir_controllers.yaml</parameters>
+
+      <ros>
+        <!-- <namespace>$(arg mir_namespace)</namespace> -->
+        <!-- <remapping>/robot_description:=/leporino/robot_description</remapping> -->
+        <!-- <remapping>/robot_description:=/robot_description_full</remapping> -->
+      </ros>
+    </plugin>
+
+  </gazebo>
 
 </robot>

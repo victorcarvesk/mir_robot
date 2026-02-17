@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<robot name="mir100" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find mir_description)/urdf/mir100_description.urdf.xacro" />
+
+  <xacro:include filename="$(find mir_gazebo)/urdf/include/diff_drive_mock.xacro" />
+
+  <xacro:include filename="$(find mir_gazebo)/urdf/include/ros2_control_plugin.xacro" />
+  <xacro:include filename="$(find mir_gazebo)/urdf/include/sensors_plugin.xacro" />
+  <xacro:include filename="$(find mir_gazebo)/urdf/include/imu_plugin.xacro" />
+
+</robot>

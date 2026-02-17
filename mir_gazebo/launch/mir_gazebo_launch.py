@@ -1,224 +1,110 @@
-from launch_ros.substitutions import FindPackageShare
-from launch_ros.actions import Node
-import os
+#!/usr/bin/env python3
 
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.conditions import IfCondition
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, \
-    SetLaunchConfiguration, AppendEnvironmentVariable
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import (LaunchConfiguration, Command,
-                                  FindExecutable, LaunchConfiguration, PathJoinSubstitution)
 from launch_ros.substitutions import FindPackageShare
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import UnlessCondition
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
 
 def generate_launch_description():
 
-    mir_description_dir = get_package_share_directory('mir_description')
-    mir_gazebo_dir = get_package_share_directory('mir_gazebo')
-    # gazebo_ros_dir = get_package_share_directory('gazebo_ros')
-    ros_gz_sim = get_package_share_directory('ros_gz_sim')
+    pkg_mir_gazebo = FindPackageShare("mir_gazebo")
+    pkg_ros_gz_sim = FindPackageShare('ros_gz_sim')
+    pkg_mir_control = FindPackageShare("mir_control")
 
-    rviz_config_file = LaunchConfiguration('rviz_config_file')
-    mir_robot_xacro_path = os.path.join(
-        get_package_share_directory('mir_description'), 'urdf', 'mir.urdf')
-    bridge_params = os.path.join(
-        get_package_share_directory('mir_gazebo'),
-        'config',
-        'mir_bridge.yaml'
-    )
 
-    ld = LaunchDescription()
+    headless_mode = LaunchConfiguration('headless_mode')
+    gazebo_config_file = LaunchConfiguration('gazebo_config_file')
+    gazebo_verbose_level = LaunchConfiguration('gazebo_verbose_level')
+    world_file = LaunchConfiguration('world_file')
 
-    declare_namespace_arg = DeclareLaunchArgument(
-        'namespace',
-        default_value='',
-        description='Namespace to push all topics into.')
+    return LaunchDescription([
 
-    declare_robot_x_arg = DeclareLaunchArgument(
-        'robot_x',
-        default_value='0.0',
-        description='Spawning position of robot (x)')
+        DeclareLaunchArgument(
+            name='world_file',
+            default_value=PathJoinSubstitution([
+                pkg_mir_gazebo, 'worlds', 'empty.world',
+            ]),
+            description='SDF world file',
+        ),
 
-    declare_robot_y_arg = DeclareLaunchArgument(
-        'robot_y',
-        default_value='0.0',
-        description='Spawning position of robot (y)')
+        DeclareLaunchArgument(
+            name='gazebo_config_file',
+            default_value=PathJoinSubstitution([
+                pkg_mir_gazebo, 'config', 'full_view.config'
+            ]),
+            description='Gazebo GUI config file',
+        ),
 
-    declare_robot_yaw_arg = DeclareLaunchArgument(
-        'robot_yaw',
-        default_value='0.0',
-        description='Spawning position of robot (yaw)')
+        DeclareLaunchArgument(
+            name='rviz_config_file',
+            default_value=PathJoinSubstitution([
+                pkg_mir_gazebo, 'rviz', 'mir_visu_full.rviz'
+            ]),
+            description='A display config file (.rviz) to load',
+        ),
 
-    declare_sim_time_arg = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='true',
-        description='Use simulation (Gazebo) clock if true')
+        DeclareLaunchArgument(
+            name='headless_mode',
+            default_value='false',
+            choices=['true', 'false'],
+            description='Run Gazebo without GUI',
+        ),
 
-    declare_description_file = DeclareLaunchArgument(
-        "description_file",
-        default_value="mir.urdf.xacro",
-        description="URDF/XACRO description file with the robot.",
-    )
+        DeclareLaunchArgument(
+            name='gazebo_verbose_level',
+            default_value='1',
+            choices=['0', '1', '2', '3', '4'],
+            description='Adjust the level of console output (0~4).',
+        ),
 
-    declare_world_arg = DeclareLaunchArgument(
-        'world',
-        default_value=os.path.join(
-            get_package_share_directory('mir_gazebo'),
-            'worlds', 'empty.world'),
-        description='Define world thats being used.')
+        #
 
-    declare_verbose_arg = DeclareLaunchArgument(
-        'verbose',
-        default_value='true',
-        description='Set to true to enable verbose mode for Gazebo.')
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                PathJoinSubstitution([
+                    pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py'
+                ]),
+            ),
+            launch_arguments={
+                'gz_args': [
+                    world_file,
+                    ' -s -r ',
+                    # ' --gui-config ', gazebo_config_file,
+                    ' -v ', gazebo_verbose_level,
+                ],
+                'on_exit_shutdown': 'true'
+            }.items(),
+        ),
 
-    declare_teleop_arg = DeclareLaunchArgument(
-        'teleop_enabled',
-        default_value='true',
-        description='Set to true to enable teleop to manually move MiR around.')
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                PathJoinSubstitution([
+                    pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py'
+                ]),
+            ),
+            launch_arguments={
+                'gz_args': [
+                    ' -g ',
+                    ' -v ', gazebo_verbose_level,
+                ],
+                'on_exit_shutdown': 'true'
+            }.items(),
+            condition=UnlessCondition(headless_mode),
+        ),
 
-    declare_rviz_arg = DeclareLaunchArgument(
-        'rviz_enabled',
-        default_value='true',
-        description='Set to true to launch rviz.')
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                PathJoinSubstitution([pkg_mir_gazebo, 'launch', 'mir_spawner_launch.py']),
+            ]),
+        ),
 
-    declare_rviz_config_arg = DeclareLaunchArgument(
-        'rviz_config_file',
-        default_value=os.path.join(
-            mir_description_dir, 'rviz', 'mir_visu_full.rviz'),
-        description='Define rviz config file to be used.')
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                PathJoinSubstitution([pkg_mir_control, 'launch', 'mir_controllers_launch.py']),
+            ]),
+        ),
 
-    declare_gui_arg = DeclareLaunchArgument(
-        'gui',
-        default_value='true',
-        description='Set to "false" to run headless.')
-
-    # launch_gazebo_world = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         os.path.join(gazebo_ros_dir, 'launch', 'gazebo.launch.py')),
-    #     launch_arguments={
-    #         'verbose': LaunchConfiguration('verbose'),
-    #         'gui': LaunchConfiguration('gui'),
-    #         'world': [mir_gazebo_dir, '/worlds/', LaunchConfiguration('world'), '.world']
-    #     }.items()
-    # )
-
-    launch_mir_description = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(mir_description_dir, 'launch', 'mir_launch.py')
-        )
-    )
-
-    launch_mir_gazebo_common = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(mir_gazebo_dir, 'launch',
-                         'include', 'mir_gazebo_common.py')
-        )
-    )
-
-    def process_namespace(context):
-
-        robot_name = "mir_robot"
-        try:
-            namespace = context.launch_configurations['namespace']
-            robot_name = namespace + '/' + robot_name
-        except KeyError:
-            pass
-        return [SetLaunchConfiguration('robot_name', robot_name)]
-
-    xacro_command = Command([
-        PathJoinSubstitution([FindExecutable(name="xacro")]),
-        " ",
-        PathJoinSubstitution([
-            FindPackageShare("mir_description"),
-            "urdf",
-            LaunchConfiguration("description_file"),
-        ])
     ])
-
-    set_urdf = SetLaunchConfiguration("robot_description", xacro_command)
-    spawn_robot = Node(
-        package='ros_gz_sim',
-        executable='create',
-        arguments=[
-            '-name', "mir_robot",
-            '-string', LaunchConfiguration("robot_description"),
-            '-x', LaunchConfiguration('robot_x'),
-            '-y', LaunchConfiguration('robot_y'),
-            '-z', '0.01'
-        ],
-        output='screen',
-    )
-    start_gazebo_ros_bridge_cmd = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=[
-            '--ros-args',
-            '-p',
-            f'config_file:={bridge_params}',
-        ],
-        output='screen',
-    )
-
-    gzserver_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(ros_gz_sim, 'launch', 'gz_sim.launch.py')
-        ),
-        launch_arguments={'gz_args': [
-            '--headless -r -s -v4 ', LaunchConfiguration('world')], 'on_exit_shutdown': 'true'}.items()
-    )
-    gzclient_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(ros_gz_sim, 'launch', 'gz_sim.launch.py')
-        ),
-        launch_arguments={'gz_args': '-g -v4 '}.items()
-    )
-    set_env_vars_resources = AppendEnvironmentVariable(
-        'GZ_SIM_RESOURCE_PATH',
-        os.path.join(mir_description_dir, 'urdf'),
-    )
-
-    launch_rviz = Node(
-        condition=IfCondition(LaunchConfiguration('rviz_enabled')),
-        package='rviz2',
-        executable='rviz2',
-        output={'both': 'log'},
-        arguments=['-d', rviz_config_file],
-        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}]
-    )
-
-    launch_teleop = Node(
-        condition=IfCondition(LaunchConfiguration("teleop_enabled")),
-        package='teleop_twist_keyboard',
-        executable='teleop_twist_keyboard',
-        namespace=LaunchConfiguration('namespace'),
-        output='screen',
-        prefix='xterm -e')
-
-    ld.add_action(OpaqueFunction(function=process_namespace))
-    ld.add_action(declare_namespace_arg)
-    ld.add_action(declare_robot_x_arg)
-    ld.add_action(declare_robot_y_arg)
-    ld.add_action(declare_description_file)
-    ld.add_action(set_urdf)
-    ld.add_action(declare_robot_yaw_arg)
-    ld.add_action(declare_sim_time_arg)
-    ld.add_action(declare_world_arg)
-    ld.add_action(declare_verbose_arg)
-    ld.add_action(declare_teleop_arg)
-    ld.add_action(declare_rviz_arg)
-    ld.add_action(declare_rviz_config_arg)
-    ld.add_action(declare_gui_arg)
-    ld.add_action(gzserver_cmd)
-    ld.add_action(gzclient_cmd)
-    ld.add_action(launch_mir_description)
-    ld.add_action(launch_mir_gazebo_common)
-    ld.add_action(set_env_vars_resources)
-    ld.add_action(spawn_robot)
-    ld.add_action(launch_rviz)
-    ld.add_action(launch_teleop)
-    ld.add_action(start_gazebo_ros_bridge_cmd)
-
-    return ld
